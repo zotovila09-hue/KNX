@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>KNX • Абсолютная приватность цифровой экосистемы</title>
+  <!-- Подключаем библиотеку AOS для плавных анимаций при скролле -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0a0a0f;
+      font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+      color: #f0f0f0;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    :root {
+      --neon-red: #ff3131;
+      --neon-red-glow: 0 0 15px rgba(255, 49, 49, 0.6);
+      --dark-bg: #0a0a0f;
+      --card-bg: #12121a;
+      --border-dim: #2a2a35;
+      --text-light: #e0e0e0;
+      --text-muted: #b0b0b0;
+    }
+
+    /* Шапка */
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.2rem 5%;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 49, 49, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: white;
+      text-shadow: 0 0 8px rgba(255, 49, 49, 0.7);
+    }
+    .logo span {
+      color: var(--neon-red);
+    }
+
+    /* МОДАЛЬНОЕ ОКНО (общие стили) */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-window {
+      background: #12121a;
+      border: 1px solid var(--neon-red);
+      border-radius: 32px;
+      padding: 2.8rem 2.2rem;
+      max-width: 550px;
+      width: 92%;
+      box-shadow: 0 0 50px rgba(255, 49, 49, 0.4);
+      position: relative;
+      animation: modalFade 0.3s ease;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    @keyframes modalFade {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px; right: 20px;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 2.2rem;
+      cursor: pointer;
+      transition: 0.2s;
+      line-height: 1;
+      z-index: 10;
+    }
+    .modal-close:hover {
+      color: var(--neon-red);
+      text-shadow: 0 0 8px var(--neon-red);
+    }
+    .modal-window h3 {
+      font-size: 2rem;
+      color: white;
+      margin-bottom: 1.8rem;
+      text-align: center;
+      padding-right: 1rem;
+    }
+    .modal-window p {
+      color: #c8c8d0;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      margin-bottom: 1.4rem;
+    }
+    .modal-window .feature-highlight {
+      color: white;
+      font-weight: 700;
+      background: rgba(255, 49, 49, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+    .modal-window ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 1.2rem 0 1.8rem;
+    }
+    .modal-window ul li {
+      margin-bottom: 0.9rem;
+      padding-left: 1.8rem;
+      position: relative;
+      color: #d0d0d0;
+    }
+    .modal-window ul li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--neon-red);
+      font-weight: bold;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+    .modal-btn {
+      width: 100%;
+      background: var(--neon-red);
+      border: none;
+      color: white;
+      font-weight: 700;
+      padding: 0.9rem;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(255,49,49,0.8);
+      transition: 0.2s;
+      margin-top: 0.5rem;
+    }
+    .modal-btn:hover {
+      background: #ff5a5a;
+      box-shadow: 0 0 28px rgba(255,49,49,0.9);
+    }
+
+    section {
+      padding: 5rem 5%;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* ГЛАВНЫЙ ЭКРАН */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 70vh;
+      padding-top: 2rem;
+      padding-bottom: 3rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 800;
+      color: var(--neon-red);
+      text-shadow: 0 0 20px rgba(255, 49, 49, 0.8);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.25rem;
+      color: #d0d0d0;
+      max-width: 700px;
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    /* ЗАГОЛОВКИ СЕКЦИЙ */
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 2.5rem;
+      color: white;
+      position: relative;
+      display: inline-block;
+    }
+    .section-title::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -10px;
+      width: 60%;
+      height: 3px;
+      background: var(--neon-red);
+      box-shadow: 0 0 12px var(--neon-red);
+    }
+
+    /* О ПРОЕКТЕ */
+    .about-text {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin: 1rem 0 2rem;
+      background: rgba(255, 49, 49, 0.03);
+      padding: 1.8rem;
+      border-radius: 24px;
+      border-left: 4px solid var(--neon-red);
+    }
+
+    /* СЕТКА ПРИЛОЖЕНИЙ */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .app-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-dim);
+      border-radius: 28px;
+      padding: 2rem 1.5rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+    }
+    .app-card:hover {
+      border-color: var(--neon-red);
+      box-shadow: 0 0 25px rgba(255, 49, 49, 0.25);
+      transform: translateY(-6px);
+    }
+
+    .app-icon {
+      font-size: 2.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .app-card h3 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: white;
+    }
+    .app-card p {
+      color: #b0b0b0;
+      font-size: 1rem;
+      line-height: 1.6;
+      flex-grow: 1;
+      margin-bottom: 1.5rem;
+    }
+
+    .learn-more-btn {
+      background: transparent;
+      border: 2px solid var(--neon-red);
+      color: var(--neon-red);
+      font-weight: 700;
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: center;
+      margin-top: auto;
+      box-shadow: 0 0 10px rgba(255, 49, 49, 0.2);
+      letter-spacing: 0.5px;
+      background: rgba(255, 49, 49, 0.03);
+      backdrop-filter: blur(4px);
+      width: fit-content;
+      align-self: center;
+    }
+    .learn-more-btn:hover {
+      background: var(--neon-red);
+      color: #0a0a0f;
+      box-shadow: 0 0 20px rgba(255, 49, 49, 0.7);
+      border-color: var(--neon-red);
+    }
+
+    /* ПОДВАЛ */
+    .site-footer {
+      background: #050508;
+      border-top: 1px solid #2a2a35;
+      padding: 2.5rem 5%;
+      text-align: center;
+      color: #aaa;
+      font-size: 0.95rem;
+      margin-top: 2rem;
+    }
+    .footer-content {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .footer-email {
+      color: var(--neon-red);
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px dotted var(--neon-red);
+      transition: 0.2s;
+    }
+    .footer-email:hover {
+      color: #ff5a5a;
+      text-shadow: 0 0 8px rgba(255,49,49,0.6);
+    }
+    .copyright {
+      margin-top: 1.2rem;
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 1rem 4%;
+      }
+      .modal-window {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Шапка только с логотипом -->
+  <header class="header">
+    <div class="logo">K<span>NX</span></div>
+  </header>
+
+  <!-- МОДАЛЬНЫЕ ОКНА ДЛЯ ПРИЛОЖЕНИЙ (с расширенной информацией) -->
+  <!-- KChat Pro Modal -->
+  <div class="modal-overlay" id="modalKChat">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalKChat">&times;</button>
+      <h3>💬 KChat Pro</h3>
+      <p>
+        <span class="feature-highlight">Десктопный и мобильный мессенджер</span>, созданный для тех, кто не готов жертвовать приватностью ради удобства.
+        Это не просто чат — это полноценная защищённая среда общения с передовыми технологиями шифрования.
+      </p>
+      <p>
+        Каждое сообщение, каждый файл и каждый звонок защищены <span class="feature-highlight">сквозным шифрованием (E2EE)</span> 
+        по протоколам, которые исключают перехват на любом этапе передачи. Даже серверы KNX не имеют ключей для расшифровки твоих данных — 
+        расшифровать переписку можешь только ты и твой собеседник.
+      </p>
+      <ul>
+        <li><strong>Медиа без сжатия</strong> — отправляй фото и видео в исходном качестве, без автоматического ухудшения разрешения. Файлы передаются байт-в-байт, сохраняя каждую деталь.</li>
+        <li><strong>Приватные каналы и группы</strong> — создавай закрытые сообщества с гибкой системой прав: назначай администраторов, ограничивай доступ к истории сообщений, настраивай временные ссылки-приглашения.</li>
+        <li><strong>Режим K-Mode</strong> — эксклюзивная функция для молодёжи и творческих людей: неоновые темы оформления, анимированные стикеры, кастомные звуковые схемы и дерзкие визуальные эффекты, которые выделяют тебя из толпы.</li>
+        <li><strong>Исчезающие сообщения</strong> — устанавливай таймер самоуничтожения для любой переписки. Сообщения бесследно исчезают с обоих устройств через заданное время, не оставляя цифровых следов.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalKChat">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- KCloud Modal -->
+  <div class="modal-overlay" id="modalKCloud">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalKCloud">&times;</button>
+      <h3>☁️ KCloud</h3>
+      <p>
+        <span class="feature-highlight">Защищённое облачное хранилище</span>, в котором безопасность стоит на первом месте.
+        В отличие от обычных облаков, KCloud шифрует твои файлы ещё до того, как они покинут устройство, — 
+        это называется <span class="feature-highlight">клиентским шифрованием (client-side encryption)</span>.
+      </p>
+      <p>
+        Это значит, что на сервер попадает уже полностью зашифрованный, нечитаемый поток данных. Даже в гипотетической ситуации 
+        физического доступа к серверам злоумышленники увидят лишь хаотичный набор символов, который невозможно восстановить без твоего личного ключа.
+      </p>
+      <ul>
+        <li><strong>Автоматический бэкап</strong> — KCloud незаметно создаёт резервные копии важных документов, контактов и медиафайлов в фоновом режиме, не расходуя заряд батареи и не тормозя устройство.</li>
+        <li><strong>Бесшовная интеграция с KChat Pro</strong> — отправляй файлы из облака в чат буквально в один клик. Больше не нужно скачивать документ на устройство, чтобы переслать его собеседнику, — всё работает прямо внутри экосистемы.</li>
+        <li><strong>Контроль доступа</strong> — ты решаешь, кто видит твои файлы. Выдавай временные или постоянные разрешения на просмотр и редактирование, а в любой момент можешь отозвать доступ одним нажатием.</li>
+        <li><strong>Zero-knowledge архитектура</strong> — мы не храним твои пароли и ключи шифрования на серверах. Расшифровать данные можешь только ты, и это фундаментальный принцип нашей системы.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalKCloud">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- K-Id Modal -->
+  <div class="modal-overlay" id="modalKId">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalKId">&times;</button>
+      <h3>🛡️ K-Id</h3>
+      <p>
+        <span class="feature-highlight">Универсальный цифровой профиль</span>, который навсегда избавляет тебя от необходимости запоминать десятки паролей.
+        K-Id — это твой ключ ко всей экосистеме KNX, привязанный исключительно к номеру телефона и защищённый многоуровневой системой верификации.
+      </p>
+      <p>
+        При первом входе с нового устройства K-Id <span class="feature-highlight">мгновенно подтягивает все твои данные</span> — 
+        историю переписок, контакты, облачные файлы, настройки интерфейса и активные подписки — с защищённого изолированного сервера.
+        Никаких ручных настроек, никаких резервных кодов восстановления: просто вводишь номер, подтверждаешь вход через push-уведомление,
+        и твоя цифровая среда готова к работе за секунды.
+      </p>
+      <ul>
+        <li><strong>Управление сессиями</strong> — в реальном времени отслеживай все активные устройства, привязанные к твоему K-Id. Видишь подозрительный вход? Заверши сессию одним нажатием, даже если устройство находится на другом конце света.</li>
+        <li><strong>Двухфакторная аутентификация</strong> — настрой дополнительный уровень защиты через биометрию, аппаратные ключи или одноразовые коды. Только ты решаешь, насколько серьёзной будет защита твоего профиля.</li>
+        <li><strong>Никаких следов</strong> — когда ты завершаешь сессию на чужом или публичном устройстве, K-Id полностью удаляет все временные файлы, кэш и историю. Будто тебя там и не было.</li>
+        <li><strong>Кросс-платформенность</strong> — единый профиль работает на Windows, Android, iOS и в веб-версии. Твоя экосистема следует за тобой, где бы ты ни находился.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalKId">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальные окна для преимуществ (с расширенной информацией) -->
+  <div class="modal-overlay" id="modalSync">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalSync">&times;</button>
+      <h3>⚡ Мгновенная синхронизация</h3>
+      <p>
+        Представь: ты садишься за любой компьютер, достаёшь новый смартфон или заходишь с планшета друга — 
+        и через секунду после подтверждения входа через <span class="feature-highlight">K-Id</span> 
+        перед тобой твоя полная цифровая среда. Все чаты, контакты, файлы, настройки интерфейса и даже 
+        незаконченные сообщения восстанавливаются в точности до последнего действия.
+      </p>
+      <p>
+        Это не просто синхронизация — это <span class="feature-highlight">мгновенное восстановление состояния</span> 
+        всей экосистемы. Технология работает на основе изолированных зашифрованных слепков, которые хранятся 
+        на распределённых серверах и расшифровываются только на стороне клиента при успешной верификации.
+      </p>
+      <ul>
+        <li><strong>Технология Zero-Trace</strong> — после выхода из учётной записи на устройстве не остаётся ни байта информации: ни логов, ни временных файлов, ни кэшированных изображений. Полная цифровая гигиена.</li>
+        <li><strong>Работа в офлайн-режиме</strong> — даже при нестабильном соединении KChat Pro сохраняет отправленные сообщения в зашифрованном буфере и доставляет их адресату сразу при появлении сети.</li>
+        <li><strong>Конфликт-свободная синхронизация</strong> — если ты одновременно работал на двух устройствах, система корректно объединяет изменения без потери данных и дублирования сообщений.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalSync">Закрыть</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSpeed">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalSpeed">&times;</button>
+      <h3>🚀 Оптимизация и скорость</h3>
+      <p>
+        Мы одержимы производительностью. В то время как другие мессенджеры разбухают от лишних функций и 
+        становятся медленными монстрами, <span class="feature-highlight">KChat Pro</span> остаётся молниеносным 
+        даже на устройствах пятилетней давности.
+      </p>
+      <p>
+        Секрет в нашем подходе к разработке: мы пишем <span class="feature-highlight">чистый нативный код</span> 
+        без тяжёлых фреймворков и раздутых библиотек. Каждая строчка оптимизирована вручную, каждый алгоритм 
+        проходит стресс-тестирование на тысячах симулированных пользователей одновременно.
+      </p>
+      <ul>
+        <li><strong>Холодный старт за 0.4 секунды</strong> — приложение запускается быстрее, чем ты успеваешь убрать палец с иконки. Никаких экранов загрузки и ожидания.</li>
+        <li><strong>Мгновенная доставка сообщений</strong> — наш серверный кластер географически распределён по континентам, что обеспечивает минимальную задержку передачи данных независимо от твоего местоположения.</li>
+        <li><strong>Работа при 1000+ активных чатах</strong> — интерфейс не тормозит и не зависает даже при огромном объёме переписок. Мы используем виртуализированную отрисовку списков и ленивую загрузку контента.</li>
+        <li><strong>Экономия батареи</strong> — оптимизированные фоновые процессы расходуют минимум энергии. KChat Pro входит в топ самых энергоэффективных мессенджеров по тестам независимых лабораторий.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalSpeed">Закрыть</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalFiles">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalFiles">&times;</button>
+      <h3>📁 Безлимитный обмен файлами</h3>
+      <p>
+        Забудь про ограничения размера файлов, с которыми ты сталкиваешься в обычных мессенджерах. 
+        Благодаря глубокой интеграции <span class="feature-highlight">KChat Pro</span> и 
+        <span class="feature-highlight">KCloud</span>, ты можешь отправлять документы любого объёма 
+        прямо в чат, и они будут переданы в исходном качестве без единого бита потерь.
+      </p>
+      <p>
+        Технология <span class="feature-highlight">потоковой передачи с шифрованием на лету</span> позволяет 
+        собеседнику начинать скачивание файла ещё до того, как ты закончил его отправку. Это особенно полезно 
+        для больших проектных файлов, видео в 4K и объёмных архивов.
+      </p>
+      <ul>
+        <li><strong>Поддержка любых форматов</strong> — отправляй .psd, .dwg, .mov, .zip и сотни других расширений. KChat Pro не накладывает искусственных ограничений на типы файлов.</li>
+        <li><strong>Исходное качество видео и фото</strong> — никакого автоматического сжатия. Твои снимки с профессиональной камеры дойдут до получателя в точности такими, какими ты их сделал.</li>
+        <li><strong>Контроль доступа к файлам</strong> — даже после отправки ты можешь отозвать доступ к документу. Файл мгновенно станет недоступным для всех участников чата, которым ты его отправлял.</li>
+        <li><strong>Предпросмотр без скачивания</strong> — собеседник может просмотреть содержимое документа, видео или аудиофайла прямо внутри чата, не загружая его полностью на устройство.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalFiles">Закрыть</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalCustom">
+    <div class="modal-window">
+      <button class="modal-close" data-close="modalCustom">&times;</button>
+      <h3>🎨 Кастомизация интерфейса</h3>
+      <p>
+        Твой мессенджер должен отражать твою личность. В <span class="feature-highlight">KChat Pro</span> 
+        мы даём тебе полный контроль над внешним видом приложения — от цветовых схем до анимаций переходов 
+        между экранами. Ты не обязан выглядеть как все.
+      </p>
+      <p>
+        Мы разработали движок тем, который позволяет менять <span class="feature-highlight">каждый элемент интерфейса</span> 
+        в реальном времени: шрифты, плотность расположения элементов, радиусы скруглений, прозрачность панелей 
+        и интенсивность теней. Все изменения применяются мгновенно, без перезагрузки.
+      </p>
+      <ul>
+        <li><strong>Режим K-Mode</strong> — эксклюзивная коллекция молодёжных тем с неоновыми акцентами, анимированными фонами, глитч-эффектами и футуристичными элементами управления. Выделяйся из серой массы стандартных приложений.</li>
+        <li><strong>Авторские темы от дизайнеров</strong> — еженедельно мы добавляем новые стили оформления, созданные профессиональными UI/UX-дизайнерами. От минималистичных тёмных схем до ярких киберпанк-палитр.</li>
+        <li><strong>Кастомные звуковые схемы</strong> — назначай уникальные звуки уведомлений для разных контактов и групп. Загружай свои аудиофайлы или выбирай из библиотеки встроенных мелодий.</li>
+        <li><strong>Создание собственных тем</strong> — продвинутые пользователи могут вручную настроить HEX-коды всех цветов интерфейса и поделиться своей темой с сообществом через KCloud.</li>
+      </ul>
+      <button class="modal-btn" data-close="modalCustom">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Первый блок: Главный экран -->
+  <section class="hero">
+    <h1 data-aos="fade-up" data-aos-duration="800">Верни себе свою приватность.</h1>
+    <p class="subtitle" data-aos="fade-up" data-aos-delay="150" data-aos-duration="800">
+      А ты уверен в безопасности своих данных? Переходи на сторону абсолютной приватности с экосистемой KNX.
+    </p>
+  </section>
+
+  <!-- Второй блок: О компании / проекте -->
+  <section data-aos="fade-up" data-aos-duration="900">
+    <h2 class="section-title">KNX — цифровая крепость</h2>
+    <div class="about-text" data-aos="fade-up" data-aos-delay="100">
+      <p style="margin-bottom: 1.2rem;">
+        <strong style="color:white; font-size:1.1rem;">KNX</strong> — это безопасная цифровая экосистема, созданная для защиты личных данных и общения.
+        Все наши сервисы связаны единым сквозным профилем <span style="color: var(--neon-red); font-weight:700;">K-Id</span>.
+      </p>
+      <p style="margin-bottom: 1.2rem;">
+        Авторизация происходит <strong style="color:white;">мгновенно по номеру телефона без паролей</strong> — 
+        ты просто вводишь номер, и система сама вытаскивает все твои данные прямо со скрытого защищенного сервера.
+        Никаких логинов, никаких утечек, никакого сбора лишней информации.
+      </p>
+      <p>
+        Каждое действие внутри экосистемы шифруется на лету. Твои переписки, файлы и настройки принадлежат только тебе.
+        KNX создан для тех, кто ценит абсолютную приватность и не готов доверять корпорациям.
+      </p>
+    </div>
+  </section>
+
+  <!-- Третий блок: Приложения (сетка карточек с кнопкой "Узнать больше") -->
+  <section>
+    <h2 class="section-title" data-aos="fade-up">Экосистема приложений</h2>
+    <div class="apps-grid">
+      
+      <!-- KChat Pro -->
+      <div class="app-card" data-aos="fade-up" data-aos-delay="50">
+        <div class="app-icon">💬</div>
+        <h3>KChat Pro</h3>
+        <p>
+          <strong style="color:white;">Десктопный и мобильный мессенджер</strong> с продвинутыми настройками приватности.
+          Сквозное шифрование, отправка медиа без сжатия и уникальный молодежный режим 
+          <span style="color:var(--neon-red); font-weight:bold;">K-Mode</span>.
+        </p>
+        <button class="learn-more-btn" data-modal="modalKChat">Узнать больше</button>
+      </div>
+
+      <!-- KCloud -->
+      <div class="app-card" data-aos="fade-up" data-aos-delay="150">
+        <div class="app-icon">☁️</div>
+        <h3>KCloud</h3>
+        <p>
+          Защищённое облачное хранилище, где файлы <strong style="color:white;">шифруются на стороне клиента перед отправкой</strong>. 
+          Автоматическое резервное копирование и интеграция с мессенджером в один клик.
+        </p>
+        <button class="learn-more-btn" data-modal="modalKCloud">Узнать больше</button>
+      </div>
+
+      <!-- K-Id -->
+      <div class="app-card" data-aos="fade-up" data-aos-delay="250">
+        <div class="app-icon">🛡️</div>
+        <h3>K-Id</h3>
+        <p>
+          Единый профиль по номеру телефона, который <strong style="color:white;">заменяет устаревшие пароли</strong>.
+          Мгновенный вход без логинов, управление сессиями и двухфакторная защита.
+        </p>
+        <button class="learn-more-btn" data-modal="modalKId">Узнать больше</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Четвёртый блок: Реальные преимущества экосистемы KNX -->
+  <section data-aos="fade-up" data-aos-duration="900">
+    <h2 class="section-title">Почему KNX — это будущее приватности</h2>
+    <div class="apps-grid">
+      <div class="app-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="app-icon">⚡</div>
+        <h3>Мгновенная синхронизация</h3>
+        <p>
+          При входе по K-Id с любого устройства все твои чаты, контакты и файлы за секунду подтягиваются со скрытого сервера. 
+          После завершения сессии не остаётся никаких следов.
+        </p>
+        <button class="learn-more-btn" data-modal="modalSync">Узнать больше</button>
+      </div>
+      <div class="app-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="app-icon">🚀</div>
+        <h3>Оптимизация и скорость</h3>
+        <p>
+          KChat Pro работает молниеносно даже на слабых ПК и бюджетных смартфонах. Чистый код и быстрые протоколы 
+          обеспечивают мгновенную доставку сообщений.
+        </p>
+        <button class="learn-more-btn" data-modal="modalSpeed">Узнать больше</button>
+      </div>
+      <div class="app-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="app-icon">📁</div>
+        <h3>Безлимитный обмен файлами</h3>
+        <p>
+          Отправляй документы любого формата без ограничений по размеру напрямую из KCloud. Файлы передаются в исходном качестве.
+        </p>
+        <button class="learn-more-btn" data-modal="modalFiles">Узнать больше</button>
+      </div>
+      <div class="app-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="app-icon">🎨</div>
+        <h3>Кастомизация интерфейса</h3>
+        <p>
+          Полная свобода оформления: десятки тем, неоновые стили и футуристичные элементы управления в режиме 
+          <span style="color:var(--neon-red); font-weight:bold;">K-Mode</span>.
+        </p>
+        <button class="learn-more-btn" data-modal="modalCustom">Узнать больше</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ПОДВАЛ с обновлённым контактом -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div>
+        Для связи и сотрудничества: 
+        <a class="footer-email" href="mailto:zotovila09@gmail.com">zotovila09@gmail.com</a>
+      </div>
+      <div class="copyright">
+        © 2026 KNX Ecosystem. Приватность — не опция, а стандарт.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Скрипт для инициализации анимаций AOS и модальных окон -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    // Инициализация библиотеки анимаций
+    AOS.init({
+      once: false,
+      duration: 700,
+      easing: 'ease-out-cubic',
+    });
+
+    // Универсальная логика для всех модальных окон
+    document.addEventListener('DOMContentLoaded', () => {
+      // Открытие модального окна по data-modal
+      document.querySelectorAll('[data-modal]').forEach(button => {
+        button.addEventListener('click', () => {
+          const modalId = button.getAttribute('data-modal');
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.add('active');
+          }
+        });
+      });
+
+      // Закрытие модального окна по data-close
+      document.querySelectorAll('[data-close]').forEach(closeElement => {
+        closeElement.addEventListener('click', () => {
+          const modalId = closeElement.getAttribute('data-close');
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.remove('active');
+          }
+        });
+      });
+
+      // Закрытие по клику на фон (overlay)
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove('active');
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
